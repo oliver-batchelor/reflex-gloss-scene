@@ -4,4 +4,4 @@ reflex-gloss-scene [![Build Status](https://secure.travis-ci.org/Saulzar/reflex-
 
 A scenegraph library using gloss and gloss-reflex, with support for picking, 
 continuous time animations and monad based switching. An example of a framework 
-created using the reflex-transformers package.
+created using the reflex-transformers package
