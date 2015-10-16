@@ -71,17 +71,18 @@ import Reflex.Monad.ReflexM
 
 import Reflex.Gloss.Vector
 
-  
+-- | Input data type more covenient for splitting than the Gloss Input type  
 data Input = MouseDown MouseButton 
            | MouseUp MouseButton
            | CharDown Char
            | CharUp Char
            | SpecialUp SpecialKey
            | SpecialDown SpecialKey  
-           | MouseOver 
-           | MouseOut
+--            | MouseOver 
+--            | MouseOut
   deriving (Show, Eq, Ord)
         
+-- | Time is just a float!        
 type Time = Float
         
 data SceneNode t = SceneNode 
@@ -100,7 +101,8 @@ $(makePrisms ''Input)
 $(makePrisms ''G.Event)
 $(makePrisms ''G.Key)
 
-
+-- | Scene Monad, passes down the scene graph a SceneNode, passes back up the scene graph renderings (Behavior t Picture)
+-- Implements MonadSwitch and MonadTime abstractions.
 newtype Scene t a = Scene { runScene :: ReaderWriterT (SceneNode t) [Behavior t Picture] (ReflexM t) a } 
                         deriving (Monad, Functor, Applicative, MonadFix)
 
