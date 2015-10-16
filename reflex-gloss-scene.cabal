@@ -59,14 +59,13 @@ library
   
   build-depends:       base >=4.6 && <4.9,
                        gloss >= 1.9.2.1 && < 1.10,
-                       gloss-rendering >= 1.9.2.1,
+                       gloss-rendering >= 1.9,
                        reflex-gloss >= 0.1.0.2 && < 0.2.0,
                        reflex >=0.2 && <0.4,
                        reflex-transformers >= 0.1 && < 1.0, 
                        reflex-animation >= 0.3 && < 1.0, 
                        dependent-sum >= 0.2.1 && < 0.3,
                        transformers >= 0.4.2 && < 0.5, 
-                       
                        mtl,
                        vector-space,
                        lens,
