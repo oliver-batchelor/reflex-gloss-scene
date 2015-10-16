@@ -25,6 +25,9 @@ import Data.Bifunctor
 
 import Reflex
 
+
+-- | Reflex.Gloss.Random
+-- A module for using random number state with reflex. Not really related to gloss, but the examples use it!
   
   
 

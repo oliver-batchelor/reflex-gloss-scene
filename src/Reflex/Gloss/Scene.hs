@@ -6,16 +6,10 @@
 {-# LANGUAGE UndecidableInstances  #-}
 
 
--------------------------------------------------------------------------------
--- |
--- Module      : Reflex.Gloss.Scene
--- Copyright   :  (c) 2015 Jeffrey Rosenbluth
--- License     :  BSD-style (see LICENSE)
--- Maintainer  :  jeffrey.rosenbluth@gmail.com
---
--- A Gloss interface for Reflex.
---
--------------------------------------------------------------------------------
+-- | Reflex.Gloss.Scene
+-- A simple scene graph implementation rendered using gloss. Contains functionality for picking and transformations.
+-- Implements interfaces for MonadSwitch (see reflex-transformers) and MonadTime (see reflex-animations) for switching, and animation support respectively.
+
 
 module Reflex.Gloss.Scene
   ( playSceneGraph
@@ -171,76 +165,58 @@ runSceneGraph' :: (Reflex t, MonadHold t m, MonadFix m) => SceneNode t -> Scene 
 runSceneGraph' node = fmap mconcat . runReflexM . flip execReaderWriterT node . runScene
 
 
+-- | Run a scenegraph in IO
 playSceneGraph :: Display -> Color -> Int ->  (forall t. Reflex t => Scene t  ()) -> IO ()
 playSceneGraph display col frequency scene = playReflex display col frequency (runSceneGraph (displaySize display) scene) where
   displaySize (InWindow _ s _) = toVector s
   displaySize (FullScreen s) = toVector s
   
   
-
-
-
-localRender :: Reflex t => (Behavior t Picture -> Behavior t Picture) -> Scene t a -> Scene t a 
-localRender f = censor (pure . f . mconcat) 
-
-
+-- | Render a picture in the current widget
 render :: Reflex t => Behavior t Picture -> Scene t ()
 render r = tell [r]
 
-
-
-  
-transformNode :: (Reflex t) => Matrix33 -> SceneNode t -> SceneNode t
-transformNode transform node = node & sceneTransform %~ fmap (transform `mm3`)
-
-  
-transformNodeDyn :: (Reflex t) => Behavior t Matrix33 -> SceneNode t -> SceneNode t
-transformNodeDyn transform node = node & sceneTransform %~ liftA2 (flip mm3) transform
-  
-localTransform :: Reflex t => Matrix33 -> Scene t a -> Scene t a 
-localTransform transform = local (transformNode transform)
     
-localTransformDyn :: Reflex t => Behavior t Matrix33 -> Scene t a -> Scene t a 
-localTransformDyn transform = local (transformNodeDyn transform)
     
-
-sceneLocalMouse :: Reflex t => SceneNode t -> Behavior t Point
-sceneLocalMouse node = liftA2 transformPoint (_sceneTransform node) (_sceneMousePosition node)
-    
+-- | Local mouse position relative to the widget
 localMouse :: Reflex t => Scene t (Behavior t Point)
 localMouse = asks sceneLocalMouse
 
+
+-- | Get the global mouse position in the window
 globalMouse :: Reflex t => Scene t (Behavior t Point)
 globalMouse = asks _sceneMousePosition
 
-
+-- | Rotate a child widget using a constant
 rotation :: Reflex t => Float -> Scene t a -> Scene t a 
 rotation degrees child = localRender (fmap $ G.Rotate degrees) $ 
     localTransform (rotationMat degrees) child
 
-    
+-- | Rotate a child widget actively using a Behavior
 activeRotation :: Reflex t => Behavior t Float -> Scene t a -> Scene t a 
 activeRotation degrees child = localRender (G.Rotate <$> degrees <*>) $   
     localTransformDyn (rotationMat <$> degrees) child
   
-
+-- | Translate a child widget using a constant
 translation :: Reflex t =>  Vector -> Scene t a -> Scene t a 
 translation (x, y) child = localRender (fmap $ G.Translate x y) $ 
     localTransform (translationMat (-x, -y)) child
 
-    
+-- | Translate a child widget actively using a Behavior
 activeTranslation :: Reflex t => Behavior t Vector -> Scene t a -> Scene t a 
 activeTranslation v child = localRender (uncurry G.Translate <$> v <*>) $   
     localTransformDyn (translationMat . negate <$> v) child  
 
   
-  
+-- | Type for picking targets
 data Target t = Target 
   { targetNode  :: SceneNode t   
   , hovering    :: Behavior t Bool
   }  
   
   
+  
+-- | Make a target from an intersection function  
 makeTarget :: Reflex t => Behavior t (Vector -> Bool) -> Scene t (Target t) 
 makeTarget intersects = do
   node  <- ask
@@ -259,31 +235,38 @@ intersectRect (sizeX, sizeY) (x, y) = x >= -sx && x <= sx && y >= -sy && y <= sy
 intersectCircle :: Float -> Vector -> Bool
 intersectCircle radius (x, y) = x * x + y * y < radius * radius    
     
+    
+-- | Make a circular picking target    
 targetCircle :: Reflex t => Behavior t Float -> Scene t (Target t) 
 targetCircle size = makeTarget (intersectCircle <$> size)
 
+
+-- | Make a rectangular picking target    
 targetRect :: Reflex t => Behavior t Vector -> Scene t (Target t) 
 targetRect size = makeTarget (intersectRect <$> size)
 
 
-
+-- Match a particular kind of mouse or key event
 nodeEvent :: Reflex t => Input -> SceneNode t -> Event t ()
 nodeEvent input node = match input $ node ^. sceneEvents  
 
-    
+
+-- | Mouse down event on a picking target
 mouseDown :: Reflex t => MouseButton -> Target t -> Event t ()
 mouseDown button target = gate (hovering target) $ nodeEvent (MouseDown button) (targetNode target)
  
-
+-- | Mouse up event on a picking target
 mouseUp :: Reflex t => MouseButton -> Target t -> Event t ()
 mouseUp button target = gate (hovering target) $ nodeEvent (MouseUp button) (targetNode target)
 
 
+-- | Mouse over event on a picking target, returns events for (entering, leaving)
 mouseOver :: (Reflex t, MonadTime t time m) => Target t -> m (Event t (), Event t ())
 mouseOver target = do
   ov <- observeChanges (hovering target)
   return (match True ov, match False ov)
 
+-- | Mouse click event for picking target, returns click event and behavior indicating current clicking
 clicked :: (Reflex t, MonadHold t m) => MouseButton -> Target t -> m (Event t (), Behavior t Bool)
 clicked button target = do
   pressing <- hold False $ leftmost 
@@ -295,7 +278,6 @@ clicked button target = do
 
 getTick :: Reflex t => Scene t (Event t Float)
 getTick = asks _sceneTick
-
 
 
 
@@ -339,3 +321,26 @@ instance Reflex t => MonadTime t Time (Scene t) where
             
     return (fmapMaybe (nonEmpty . fmap fst) firing)  
 
+
+    
+-- Internal utility functions for Scene Node transformations
+localRender :: Reflex t => (Behavior t Picture -> Behavior t Picture) -> Scene t a -> Scene t a 
+localRender f = censor (pure . f . mconcat) 
+
+
+transformNode :: (Reflex t) => Matrix33 -> SceneNode t -> SceneNode t
+transformNode transform node = node & sceneTransform %~ fmap (transform `mm3`)
+
+  
+transformNodeDyn :: (Reflex t) => Behavior t Matrix33 -> SceneNode t -> SceneNode t
+transformNodeDyn transform node = node & sceneTransform %~ liftA2 (flip mm3) transform
+  
+localTransform :: Reflex t => Matrix33 -> Scene t a -> Scene t a 
+localTransform transform = local (transformNode transform)
+   
+    
+localTransformDyn :: Reflex t => Behavior t Matrix33 -> Scene t a -> Scene t a 
+localTransformDyn transform = local (transformNodeDyn transform)
+    
+sceneLocalMouse :: Reflex t => SceneNode t -> Behavior t Point
+sceneLocalMouse node = liftA2 transformPoint (_sceneTransform node) (_sceneMousePosition node)    
