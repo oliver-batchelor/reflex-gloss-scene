@@ -39,13 +39,13 @@ toggleButtons = do
   
 widget :: Reflex t => Scene t  ()
 widget = do
-  translation (-100, 0) $ resetButtons 
-  translation (0, 0) $ toggleButtons 
-  translation (100, 0) $ toggleButtons 
+  translation (-100, 0) resetButtons 
+  translation (0, 0)    toggleButtons 
+  translation (100, 0)  toggleButtons 
 
 
 main = playSceneGraph display background frequency widget
   where 
-    display = (InWindow "reflex frp-zoo" (300, 200) (0, 0))
+    display = InWindow "Reflex Frp-zoo" (300, 200) (0, 0)
     background = white
     frequency = 60  

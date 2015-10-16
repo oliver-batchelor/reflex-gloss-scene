@@ -1,22 +1,20 @@
-{-# LANGUAGE RecursiveDo #-}
+-- {-# LANGUAGE RecursiveDo #-}
 
 module Main where
 
 import Reflex
 import Reflex.Gloss.Scene
-import Reflex.Gloss.Random
-import Reflex.Monad.Time
-import Reflex.Animation
+-- import Reflex.Monad.Time
+-- import Reflex.Animation
 
 
-import Reflex.Monad
+-- import Reflex.Monad
 
 import Graphics.Gloss
 
-import Data.Monoid
-import Data.Maybe
 
-import Control.Applicative hiding (optional)
+
+-- import Control.Applicative hiding (optional)
 
 import Widgets
 
@@ -65,6 +63,6 @@ widget = do
 
 main = playSceneGraph display background frequency widget
   where 
-    display = (InWindow "Nice Window" (600, 600) (0, 0))
+    display = InWindow "Animations example" (600, 600) (0, 0)
     background = white
     frequency = 30

@@ -1,4 +1,4 @@
-{-# LANGUAGE RecursiveDo #-}
+{-# OPTIONS_GHC -fno-warn-orphan-instances #-}
 
 module Reflex.Gloss.Random 
   ( module Control.Monad.Random
@@ -30,18 +30,18 @@ import Reflex
 
 -- These should really be in base!
 instance (Random a, Random b) => Random (a, b) where 
-  randomR ((a, b), (a', b')) g = runState (liftA2 (,) (state $ randomR (a, a')) (state $ randomR (b, b'))) g
-  random g       = runState (liftA2 (,) (state random) (state random)) g
+  randomR ((a, b), (a', b'))  = runState (liftA2 (,) (state $ randomR (a, a')) (state $ randomR (b, b'))) 
+  random        = runState (liftA2 (,) (state random) (state random)) 
   
 
 instance (Random a, Random b, Random c) => Random (a, b, c) where 
-  randomR ((a, b, c), (a', b', c')) g = runState (liftA3 (,,) (state $ randomR (a, a')) (state $ randomR (b, b')) (state $ randomR (c, c'))) g
-  random g       = runState (liftA3 (,,) (state random) (state random) (state random)) g
+  randomR ((a, b, c), (a', b', c'))  = runState (liftA3 (,,) (state $ randomR (a, a')) (state $ randomR (b, b')) (state $ randomR (c, c'))) 
+  random        = runState (liftA3 (,,) (state random) (state random) (state random)) 
 
   
 instance (Random a, Random b, Random c, Random d) => Random (a, b, c, d) where 
-  randomR ((a, b, c, d), (a', b', c', d')) g = runState ((,,,) <$> state (randomR (a, a')) <*> state (randomR (b, b'))  <*> state (randomR (c, c')) <*> state (randomR (d, d'))) g
-  random g       = runState ((,,,) <$> state random  <*> state random <*> state random <*> state random)  g
+  randomR ((a, b, c, d), (a', b', c', d'))  = runState ((,,,) <$> state (randomR (a, a')) <*> state (randomR (b, b'))  <*> state (randomR (c, c')) <*> state (randomR (d, d')))
+  random        = runState ((,,,) <$> state random  <*> state random <*> state random <*> state random)  
 
 -- and these should be in gloss!
 

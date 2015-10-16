@@ -91,6 +91,6 @@ widget = do
 
 main = playSceneGraph display background frequency widget
   where 
-    display = (InWindow "Nice Window" (600, 600) (0, 0))
+    display = InWindow "Collections example" (600, 600) (0, 0)
     background = white
     frequency = 30

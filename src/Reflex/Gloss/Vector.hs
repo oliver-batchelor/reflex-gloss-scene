@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-orphan-instances #-}
+
+
 module Reflex.Gloss.Vector 
   ( mv3
   , mm3
@@ -15,7 +18,6 @@ module Reflex.Gloss.Vector
 import Graphics.Gloss.Rendering
 
 import Data.VectorSpace
-import Control.Lens hiding ((<.>))
 
 
 type Vector3 = (Float, Float, Float)
@@ -27,7 +29,7 @@ mv3  (a, b, c) v = (a <.> v, b <.> v, c <.> v)
 
 
 vm3 :: Vector3 -> Matrix33 -> Vector3
-vm3 (x, y, z) (a, b, c) = (x *^ a ^+^ y *^ b ^+^ z *^ c)
+vm3 (x, y, z) (a, b, c) = x *^ a ^+^ y *^ b ^+^ z *^ c
 
 
 

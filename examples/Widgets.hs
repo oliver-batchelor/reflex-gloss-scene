@@ -11,13 +11,8 @@ module Widgets
 
 import Reflex
 import Reflex.Gloss.Scene
-
-import Reflex.Monad
-
 import Graphics.Gloss
-import Data.Monoid
 
-import Control.Applicative hiding (optional)
 
 
 smallText :: String -> Picture
@@ -41,12 +36,12 @@ renderButton c isHovering isPressing str (sx, sy) = mconcat
 
 
 coloredButton :: Reflex t => Behavior t Color -> Behavior t String -> Behavior t Vector -> Scene t (Event t ())
-coloredButton color str size = do
+coloredButton col str size = do
   
   target <- targetRect size
   (click, pressing) <- clicked LeftButton target
   
-  render $ renderButton <$> color <*> hovering target
+  render $ renderButton <$> col <*> hovering target
             <*> pressing <*> str <*> size
   return click
   

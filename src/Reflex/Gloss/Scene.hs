@@ -52,15 +52,14 @@ module Reflex.Gloss.Scene
   where
 
 import Control.Monad.Fix      
-import Control.Monad.IO.Class 
 import Control.Monad.Reader
 
-import Control.Lens hiding ((<.>))
+import Control.Lens hiding ((<.>), transform)
 import Control.Applicative
 
 import Data.Monoid
 import Data.List
-import Data.List.NonEmpty (NonEmpty, nonEmpty)
+import Data.List.NonEmpty (nonEmpty)
 
 
 import Reflex
@@ -69,9 +68,7 @@ import Reflex.Gloss
 import Reflex.Monad.Time
 
 import Graphics.Gloss.Interface.IO.Game hiding (Event, KeyDown, KeyUp)
-
 import qualified Graphics.Gloss.Interface.IO.Game as G
-import Graphics.Gloss.Rendering
 
 
 import Reflex.Monad
@@ -148,7 +145,7 @@ toInput (key, d, _, _) = case (key, d) of
     
             
 previewF ::  FunctorMaybe f => Getting (First b) s b -> f s -> f b
-previewF getting = fmapMaybe (preview getting) 
+previewF getter = fmapMaybe (preview getter) 
             
         
 runSceneGraph :: forall t m. (Reflex t, MonadHold t m, MonadFix m) => Vector -> Scene t () -> Event t Float -> Event t InputEvent -> m (Behavior t Picture)
@@ -175,7 +172,7 @@ runSceneGraph' node = fmap mconcat . runReflexM . flip execReaderWriterT node . 
 
 
 playSceneGraph :: Display -> Color -> Int ->  (forall t. Reflex t => Scene t  ()) -> IO ()
-playSceneGraph display color frequency scene = playReflex display color frequency (runSceneGraph (displaySize display) scene) where
+playSceneGraph display col frequency scene = playReflex display col frequency (runSceneGraph (displaySize display) scene) where
   displaySize (InWindow _ s _) = toVector s
   displaySize (FullScreen s) = toVector s
   
@@ -218,26 +215,22 @@ globalMouse = asks _sceneMousePosition
 
 
 rotation :: Reflex t => Float -> Scene t a -> Scene t a 
-rotation degrees child = do
-  localRender (fmap $ G.Rotate degrees) $ do
+rotation degrees child = localRender (fmap $ G.Rotate degrees) $ 
     localTransform (rotationMat degrees) child
 
     
 activeRotation :: Reflex t => Behavior t Float -> Scene t a -> Scene t a 
-activeRotation degrees child = do
-  localRender (G.Rotate <$> degrees <*>) $ do   
+activeRotation degrees child = localRender (G.Rotate <$> degrees <*>) $   
     localTransformDyn (rotationMat <$> degrees) child
   
 
 translation :: Reflex t =>  Vector -> Scene t a -> Scene t a 
-translation (x, y) child = do
-  localRender (fmap $ G.Translate x y) $ do
+translation (x, y) child = localRender (fmap $ G.Translate x y) $ 
     localTransform (translationMat (-x, -y)) child
 
     
 activeTranslation :: Reflex t => Behavior t Vector -> Scene t a -> Scene t a 
-activeTranslation v child = do
-  localRender (uncurry G.Translate <$> v <*>) $ do   
+activeTranslation v child = localRender (uncurry G.Translate <$> v <*>) $   
     localTransformDyn (translationMat . negate <$> v) child  
 
   
@@ -252,7 +245,7 @@ makeTarget :: Reflex t => Behavior t (Vector -> Bool) -> Scene t (Target t)
 makeTarget intersects = do
   node  <- ask
   mouse <- localMouse
-  return $ Target 
+  return  Target 
     { targetNode = node
     , hovering   = intersects <*> mouse
     }  
@@ -288,8 +281,8 @@ mouseUp button target = gate (hovering target) $ nodeEvent (MouseUp button) (tar
 
 mouseOver :: (Reflex t, MonadTime t time m) => Target t -> m (Event t (), Event t ())
 mouseOver target = do
-  over <- observeChanges (hovering target)
-  return (match True over, match False over)
+  ov <- observeChanges (hovering target)
+  return (match True ov, match False ov)
 
 clicked :: (Reflex t, MonadHold t m) => MouseButton -> Target t -> m (Event t (), Behavior t Bool)
 clicked button target = do
