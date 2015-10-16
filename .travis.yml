@@ -21,7 +21,7 @@ matrix:
    - env: CABALVER=head GHCVER=head 
   include:
     - env: CABALVER=1.22 GHCVER=7.10.2
-      addons: {apt: {packages: [cabal-install-1.22, ghc-7.10.2, alex-3.1.4, happy-1.19.5],sources: [hvr-ghc]}}
+      addons: {apt: {packages: [freeglut3-dev, cabal-install-1.22, ghc-7.10.2, alex-3.1.4, happy-1.19.5],sources: [hvr-ghc]}}
     - env: CABALVER=head GHCVER=head
       addons: {apt: {packages: [cabal-install-head, ghc-head, alex-3.1.4, happy-1.19.5],  sources: [hvr-ghc]}}
   fast_finish: true
