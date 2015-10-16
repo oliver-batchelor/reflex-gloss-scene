@@ -62,7 +62,7 @@ library
                        reflex-gloss >= 0.1.0.2 && < 0.2.0,
                        reflex >=0.2 && <0.4,
                        reflex-transformers >= 0.1 && < 1.0, 
-                       reflex-animation >= 0.1 && < 1.0, 
+                       reflex-animation >= 0.3 && < 1.0, 
                        dependent-sum >= 0.2.1 && < 0.3,
                        transformers >= 0.4.2 && < 0.5, 
                        gloss-rendering >= 1.9,
