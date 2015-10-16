@@ -43,8 +43,6 @@ executable collections
   build-depends:       base, gloss, reflex, reflex-transformers, reflex-gloss-scene,  reflex-animation, transformers, mtl, linear, lens, containers
   default-extensions:  MultiParamTypeClasses ScopedTypeVariables RankNTypes FlexibleContexts TypeFamilies
 
-
-
 executable frpzoo
   hs-source-dirs:      examples
   default-language:    Haskell2010
