@@ -59,7 +59,7 @@ library
   
   build-depends:       base >=4.6 && <4.9,
                        gloss >= 1.9.2.1 && < 1.10,
-                       gloss-rendering >= 1.9,
+                       gloss-rendering >= 1.9.2.1,
                        reflex-gloss >= 0.1.0.2 && < 0.2.0,
                        reflex >=0.2 && <0.4,
                        reflex-transformers >= 0.1 && < 1.0, 
