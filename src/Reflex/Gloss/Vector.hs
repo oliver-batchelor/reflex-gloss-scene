@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphan-instances #-}
-
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Reflex.Gloss.Vector 
   ( mv3
