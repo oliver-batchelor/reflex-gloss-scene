@@ -29,12 +29,30 @@ module Reflex.Gloss.Scene
   , makeTarget
   , hovering
   , Target
-   
+  
+  , localMouse
+  , globalMouse
+      
   , mouseUp
   , mouseDown
   , clicked
   
+  , KeyEvents
+  , keyEvents
+  
+  , specialDown
+  , specialUp
+  
+  , keyDown
+  , keyUp
+  
   , mouseOver
+  
+  , observe
+  , observeChanges
+  
+  , integrate
+  , integrateDyn
   
   , MouseButton(..)
   , SpecialKey (..)
@@ -147,7 +165,7 @@ previewF getter = fmapMaybe (preview getter)
 runSceneGraph :: forall t m. (Reflex t, MonadHold t m, MonadFix m) => Vector -> Scene t () -> Event t Float -> Event t InputEvent -> m (Behavior t Picture)
 runSceneGraph initialSize scene tick inputs = do
   time <- foldDyn (+) 0 tick  
-  mousePosition <- hold (1/0, 1/0) $ previewF _EventMotion inputs
+  mousePosition <- hold (0, 0) $ previewF _EventMotion inputs
   windowSize <- hold initialSize (toVector <$> previewF _EventResize inputs)
   
   let rootNode = SceneNode 
@@ -248,9 +266,30 @@ targetRect :: Reflex t => Behavior t Vector -> Scene t (Target t)
 targetRect size = makeTarget (intersectRect <$> size)
 
 
--- Match a particular kind of mouse or key event
+-- | Match a particular kind of mouse or key event
 nodeEvent :: Reflex t => Input -> SceneNode t -> Event t ()
 nodeEvent input node = match input $ node ^. sceneEvents  
+
+
+data KeyEvents t = KeyEvents 
+  { keyNode  :: SceneNode t   
+  }  
+  
+keyEvents :: Reflex t => Scene t (KeyEvents t)
+keyEvents = KeyEvents <$> ask
+  
+-- | Key event queries
+keyDown :: Reflex t => KeyEvents t -> Char -> Event t ()
+keyDown (KeyEvents node) c = nodeEvent (CharDown c) node
+
+keyUp :: Reflex t => KeyEvents t -> Char -> Event t ()
+keyUp (KeyEvents node) c = nodeEvent (CharUp c) node
+
+specialDown :: Reflex t => KeyEvents t -> SpecialKey -> Event t ()
+specialDown (KeyEvents node) s = nodeEvent (SpecialDown s) node
+
+specialUp :: Reflex t => KeyEvents t -> SpecialKey -> Event t ()
+specialUp (KeyEvents node) s = nodeEvent (SpecialUp s) node
 
 
 -- | Mouse down event on a picking target
@@ -263,13 +302,13 @@ mouseUp button target = gate (hovering target) $ nodeEvent (MouseUp button) (tar
 
 
 -- | Mouse over event on a picking target, returns events for (entering, leaving)
-mouseOver :: (Reflex t, MonadTime t time m) => Target t -> m (Event t (), Event t ())
+mouseOver :: (Reflex t) => Target t -> Scene t (Event t (), Event t ())
 mouseOver target = do
   ov <- observeChanges (hovering target)
   return (match True ov, match False ov)
 
 -- | Mouse click event for picking target, returns click event and behavior indicating current clicking
-clicked :: (Reflex t, MonadHold t m) => MouseButton -> Target t -> m (Event t (), Behavior t Bool)
+clicked :: (Reflex t) => MouseButton -> Target t -> Scene t (Event t (), Behavior t Bool)
 clicked button target = do
   pressing <- hold False $ leftmost 
     [ False <$ nodeEvent (MouseUp button) (targetNode target)
@@ -282,17 +321,32 @@ getTick :: Reflex t => Scene t (Event t Float)
 getTick = asks _sceneTick
 
 
+observe :: Reflex t => Behavior t a -> Scene t (Event t a)
+observe b = tag b <$> getTick  
+
+
+
+-- | Observe changes in a 'Behavior a' it's Eq a instance
+observeChanges :: (Eq a, Reflex t) => Behavior t a -> Scene t (Event t a)
+observeChanges b = do
+  initial <- sample b
+  d <- holdDyn initial =<< observe b
+  return (updated $ nubDyn d)  
+
+
+integrate :: (VectorSpace v, Scalar v ~ Time, Reflex t) => v -> Behavior t v -> Scene t (Behavior t v)
+integrate x dx  = do
+  frame <- attachWith (^*) dx <$> getTick
+  current <$> foldDyn (^+^) x frame
+  
+integrateDyn :: (VectorSpace v, Scalar v ~ Time, Reflex t) => v -> Dynamic t v -> Scene t (Dynamic t v)
+integrateDyn x dx  = do
+  frame <- attachDynWith (^*) dx <$> getTick
+  foldDyn (^+^) x frame
+
 
 instance Reflex t => MonadTime t Time (Scene t) where
 
-  --observe :: MonadTime t m => Behavior t a -> m (Event t a)
-  observe b = tag b <$> getTick  
-
-  --integrate :: (VectorSpace v, Scalar v ~ Time, MonadReflex t m) => v -> Behavior t v -> Scene t (Behavior t v)
-  integrate x dx  = do
-    frame <- attachWith (^*) dx <$> getTick
-    current <$> foldDyn (^+^) x frame
-    
 
   --after :: MonadReflex t m => Time -> Scene t (Event t ())
   after t = do
