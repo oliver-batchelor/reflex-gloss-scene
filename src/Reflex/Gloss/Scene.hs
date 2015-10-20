@@ -26,6 +26,8 @@ module Reflex.Gloss.Scene
   
   , targetRect
   , targetCircle
+  , targetWindow
+  
   , makeTarget
   , hovering
   , Target
@@ -266,6 +268,9 @@ targetRect :: Reflex t => Behavior t Vector -> Scene t (Target t)
 targetRect size = makeTarget (intersectRect <$> size)
 
 
+targetWindow :: Reflex t => Scene t (Target t)
+targetWindow = makeTarget (pure (const True))
+
 -- | Match a particular kind of mouse or key event
 nodeEvent :: Reflex t => Input -> SceneNode t -> Event t ()
 nodeEvent input node = match input $ node ^. sceneEvents  
@@ -334,10 +339,10 @@ observeChanges b = do
   return (updated $ nubDyn d)  
 
 
-integrate :: (VectorSpace v, Scalar v ~ Time, Reflex t) => v -> Behavior t v -> Scene t (Behavior t v)
+integrate :: (VectorSpace v, Scalar v ~ Time, Reflex t) => v -> Behavior t v -> Scene t (Dynamic t v)
 integrate x dx  = do
   frame <- attachWith (^*) dx <$> getTick
-  current <$> foldDyn (^+^) x frame
+  foldDyn (^+^) x frame
   
 integrateDyn :: (VectorSpace v, Scalar v ~ Time, Reflex t) => v -> Dynamic t v -> Scene t (Dynamic t v)
 integrateDyn x dx  = do

@@ -77,7 +77,7 @@ widget = do
            rotation 40 $
       button (constant "New") (constant (80, 30))
   
-  degrees <- integrate 0 (constant 4)
+  degrees <- current <$> integrate 0 (constant 4)
 
   activeRotation degrees $ do
     newItems <- fmap makeCircle <$> foldRand (mkStdGen 0) randomCircle click  
