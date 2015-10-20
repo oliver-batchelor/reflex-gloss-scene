@@ -1,5 +1,5 @@
 name:                reflex-gloss-scene
-version:             0.1
+version:             0.1.2
 synopsis:            A simple scene-graph using reflex and gloss
 description:         A scenegraph library using gloss and gloss-reflex, with support for picking, 
                      continuous time animations and monad based switching. An example of a framework 
